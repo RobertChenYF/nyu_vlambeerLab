@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 // MAZE PROC GEN LAB
 // all students: complete steps 1-6, as listed in this file
 // optional: if you're up for a bit of a mind safari, complete the "extra tasks" to do at the very bottom
@@ -11,16 +12,95 @@ using UnityEngine;
 
 public class Pathmaker : MonoBehaviour {
 
-// STEP 2: ============================================================================================
-// translate the pseudocode below
+	// STEP 2: ============================================================================================
+	// translate the pseudocode below
 
-//	DECLARE CLASS MEMBER VARIABLES:
-//	Declare a private integer called counter that starts at 0; 		// counter will track how many floor tiles I've instantiated
-//	Declare a public Transform called floorPrefab, assign the prefab in inspector;
-//	Declare a public Transform called pathmakerSpherePrefab, assign the prefab in inspector; 		// you'll have to make a "pathmakerSphere" prefab later
+	//	DECLARE CLASS MEMBER VARIABLES:
+	//	Declare a private integer called counter that starts at 0; 		// counter will track how many floor tiles I've instantiated
+	//	Declare a public Transform called floorPrefab, assign the prefab in inspector;
+	//	Declare a public Transform called pathmakerSpherePrefab, assign the prefab in inspector; 		// you'll have to make a "pathmakerSphere" prefab later
+	private int counter = 0;
+	public static int globalCounter;
+	public GameObject[] floorPrefab;
+	public GameObject pathmakerSpherePrefab;
+	private float turnRightProbablity;
+	private float turnLeftProbablity;
+	private float spawnProbablity;
+	private int counterUpperLimit = 0;
+	public static int PathSphereCount = 0;
+	void Start()
+	{
+		
+		counterUpperLimit = Random.Range(40,61);
+		float turnRightChance = Random.Range(20.0f,40.0f);
+		float turnLeftChance = Random.Range(20.0f,40.0f);
+		float spawnChance = Random.Range(1.0f,7.0f);
+		PathSphereCount++;
+		float stayStraightChance = Random.Range(25.0f,35.0f);
+		turnRightProbablity = turnRightChance / (turnRightChance + turnLeftChance + spawnChance + stayStraightChance);
+		turnLeftProbablity = turnLeftChance / (turnRightChance + turnLeftChance + spawnChance + stayStraightChance);
+		spawnProbablity = spawnChance / (turnRightChance + turnLeftChance + spawnChance + stayStraightChance);
+	}
+
+
+
+
+
 
 
 	void Update () {
+
+		if (counter < counterUpperLimit && globalCounter < 500)
+		{
+			float randomFloat = Random.Range(0.0f, 1.0f);
+			if (randomFloat < turnRightProbablity)
+			{
+				transform.Rotate(0.0f,90.0f,0.0f);
+				//Debug.Log("rotate");
+				//Debug.Log(transform.forward);
+				
+			}
+			else if (randomFloat >= turnRightProbablity && randomFloat < turnLeftProbablity)
+			{
+				transform.Rotate(0.0f, -90.0f, 0.0f);
+				//Debug.Log("rotate");
+				//Debug.Log(transform.forward);
+			}
+			else if (randomFloat>= 1.0 - spawnProbablity)
+			{
+				Instantiate(pathmakerSpherePrefab, transform.position, transform.rotation);
+				//Debug.Log("new ball");
+			}
+
+			Collider[] hitColliders = Physics.OverlapSphere(transform.position, 0.5f);
+			if (hitColliders.Length == 1)
+			{
+				int randomInt = Random.Range(0,3);
+				GameObject a = Instantiate(floorPrefab[randomInt], transform.position, transform.rotation);
+				if (!CameraController.floorsX.Contains(Mathf.RoundToInt(a.transform.position.x)))
+				{
+					CameraController.floorsX.Add(Mathf.RoundToInt(a.transform.position.x));
+				}
+				if (!CameraController.floorsZ.Contains(Mathf.RoundToInt(a.transform.position.z)))
+				{
+					CameraController.floorsZ.Add(Mathf.RoundToInt(a.transform.position.z));
+				}
+
+
+				CameraController.floors.Add(a);
+				counter++;
+				globalCounter++;
+			}
+			
+			transform.position = transform.position + transform.forward * 5;
+			
+		}
+		else 
+		{
+			//Debug.Log(globalCounter);
+			PathSphereCount--;
+			Destroy(gameObject);
+		}
 //		If counter is less than 50, then:
 //			Generate a random number from 0.0f to 1.0f;
 //			If random number is less than 0.25f, then rotate myself 90 degrees;
